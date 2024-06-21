@@ -1,5 +1,5 @@
-A custom made event loop with async and await syntax
-background tasks, and helper functions.
+A custom made event loop with async and await syntax,
+background tasks, and custom functions.
 
 The selectors module makes this all possible.
 
