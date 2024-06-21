@@ -2,7 +2,6 @@ import selectors
 from queue import Queue
 from task import Task
 from future import Future
-from connection import Connection
 
 
 class EventLoop:
@@ -46,10 +45,7 @@ class EventLoop:
 
     async def gather(self, *args):
         task = Task(loop=self)
-        if isinstance(args[0],Task):
-            await task.start_gather_tasks(*args)
-        elif isinstance(args[0],Connection):
-            await task.start_gather_connections(*args)
+        await task.gather_tasks(*args)
         responses = await task
         return responses
 
@@ -58,10 +54,23 @@ class EventLoop:
         task.start()
         return task
 
-    def add_connection(self, connection, fut=None):
+    def add_connection(self, connection, fut=None,in_gather=False):
+        """
+            in gather=False makes it so we know to set the
+            task's fut reference to synchronize the task
+            in between print statements
+
+            in_gather=True means that the setting
+            the task's fut reference will be set
+            in the task's gather function because only
+            the last future/connection of the gather function
+            needs to be set to the task's fut reference
+        """
         if fut is None:
             fut = Future()
             connection.fut = fut
+        if not in_gather:
+            Task.fut_reference.append(fut)
         connection.initialize_connection()
         if len(self.select_connections) < self.max_connections:
             self.select_connections.append(connection)

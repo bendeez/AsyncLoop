@@ -53,10 +53,10 @@ class Connection:
         try:
             data = self.client.recv(1024)
             if not data:
+                self.fut.set_result(self.buffer.decode())
                 if self.fut.unblocking_task is not None:
                     task = self.fut.unblocking_task
                     task.update_progress(self.fut,self.buffer.decode())
-                self.fut.set_result(self.buffer.decode())
                 loop.remove_connection(self)
             self.buffer += data
         except ssl.SSLError:
