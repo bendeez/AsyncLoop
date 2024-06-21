@@ -1,5 +1,5 @@
 A custom made event loop with async and await syntax,
-background tasks, and custom functions.
+background tasks, and custom functions, along with concurrent synchronization.
 
 The selectors module makes this all possible.
 
