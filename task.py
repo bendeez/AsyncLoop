@@ -7,8 +7,8 @@ class Task(Future):
     def __init__(self, loop, coro=None):
         super().__init__()
         self.loop = loop
-        self.coro = coro
-        self.fut_result = {}
+        self.coro = coro # some tasks run coros and some tasks gather tasks
+        self.fut_result = {} # used to set results of fut that were not set after await somehow
         self.results = []
         self.unfinished_futures = []
     async def gather_tasks(self,*tasks):
@@ -33,6 +33,9 @@ class Task(Future):
                 responses[index] = response.result  # set the result of futures that were somewhat
         self.set_result(responses)                  # not set
     def start(self):
+        """
+            runs task without blocking
+        """
         if self.coro:
             try:
                 while True:

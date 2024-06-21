@@ -13,6 +13,7 @@ class EventLoop:
         self.connection_queue = Queue()
 
     def run(self, coro):
+        # main coro
         try:
             coro.send(None)
             self.run_until_complete(coro)
@@ -20,6 +21,7 @@ class EventLoop:
             pass
 
     def run_until_complete(self, coro):
+        # main coro
         while True:
             self.check_queue_connections()
             if len(self.select_connections) == 0:
@@ -35,6 +37,12 @@ class EventLoop:
                     connection.send_request(client, mask, self)
 
     def check_queue_connections(self):
+        """
+            checks for waiting requests/connections when
+            the max connection level isn't reach
+            after a connection has been removed from
+            select connections
+        """
         if len(self.select_connections) < self.max_connections:
             if not self.connection_queue.empty():
                 connection = self.connection_queue.get()
@@ -77,6 +85,7 @@ class EventLoop:
             self.select.register(connection.client, selectors.EVENT_READ | selectors.EVENT_WRITE,
                                  data=connection)
         else:
+            # limits the amount of concurrent connections
             self.connection_queue.put(connection)
         return fut
 
