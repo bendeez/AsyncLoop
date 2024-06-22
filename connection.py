@@ -17,8 +17,7 @@ class Connection:
         self.get_url_details()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.port == 443:
-            context = ssl.create_default_context()
-            self.client = context.wrap_socket(s, server_hostname=self.host)
+            self.client = ssl.create_default_context().wrap_socket(s, server_hostname=self.host)
             self.client.setblocking(False)
         else:
             self.client = s
