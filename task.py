@@ -10,7 +10,8 @@ class Task(Future):
         self.coro = coro # some tasks run coros and some tasks gather tasks
         self.fut_result = {} # used to set results of fut that were not set after await somehow
         self.results = []
-        self.unfinished_futures = []
+        self.unfinished_futures = [] # keep track of unfinished futures to avoid unfinished results
+
     async def gather_tasks(self,*tasks):
         """
             gather connections and tasks
@@ -30,8 +31,9 @@ class Task(Future):
         responses = [await fut for fut in futures]
         for index,response in enumerate(responses):
             if isinstance(response,Future):
-                responses[index] = response.result  # set the result of futures that were somewhat
-        self.set_result(responses)                  # not set
+                responses[index] = response.result  # set the result of futures that were somewhat not set
+        self.set_result(responses)
+
     def start(self):
         """
             runs task without blocking
@@ -47,11 +49,13 @@ class Task(Future):
                         break
             except StopIteration as e:
                 self.set_unblocking_task_result(e.value)
+
     def update_progress(self,fut,result):
         self.unfinished_futures.remove(fut)
-        self.fut_result[fut] = result
-        if len(self.unfinished_futures) == 0:
-            self.start()
+        self.fut_result[fut] = result # store the futures to results
+        if len(self.unfinished_futures) == 0: # all futures/tasks are completed
+            self.start() # continue task after previous await statement in task
+
 
     def set_unblocking_task_result(self,values):
         if isinstance(values, list):
