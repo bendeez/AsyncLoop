@@ -46,7 +46,7 @@ class Task(Future):
                     self.unfinished_futures.append(fut)
                     if fut in Task.fut_reference:
                         Task.fut_reference.remove(fut)
-                        break
+                        break # pause continuation of task until the previous futures are set
             except StopIteration as e:
                 self.set_unblocking_task_result(e.value)
 
