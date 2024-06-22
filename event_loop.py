@@ -82,8 +82,7 @@ class EventLoop:
         connection.initialize_connection()
         if len(self.select_connections) < self.max_connections:
             self.select_connections.append(connection)
-            self.select.register(connection.client, selectors.EVENT_READ | selectors.EVENT_WRITE,
-                                 data=connection)
+            self.select.register(connection.client, selectors.EVENT_READ | selectors.EVENT_WRITE, data=connection)
         else:
             # limits the amount of concurrent connections
             self.connection_queue.put(connection)
