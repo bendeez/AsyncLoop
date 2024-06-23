@@ -30,11 +30,10 @@ class EventLoop:
             events = self.select.select()
             for key, mask in events:
                 connection = key.data
-                client = key.fileobj
                 if mask & selectors.EVENT_READ:
-                    connection.get_response(client, mask, self)
+                    connection.read_callback(loop=self)
                 if mask & selectors.EVENT_WRITE:
-                    connection.send_request(client, mask, self)
+                    connection.write_callback(loop=self)
 
     def check_queue_connections(self):
         """
@@ -79,7 +78,7 @@ class EventLoop:
             connection.fut = fut
         if not in_gather:
             Task.fut_reference.append(fut)
-        connection.initialize_connection()
+        connection.connection_callback()
         if len(self.select_connections) < self.max_connections:
             self.select_connections.append(connection)
             self.select.register(connection.client, selectors.EVENT_READ | selectors.EVENT_WRITE,

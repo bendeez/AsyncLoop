@@ -4,6 +4,7 @@ from connection import Connection
 class Task(Future):
 
     fut_reference = [] # used to synchronize tasks in between print statements
+
     def __init__(self, loop, coro=None):
         super().__init__()
         self.loop = loop
