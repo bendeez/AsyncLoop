@@ -1,7 +1,7 @@
 import selectors
 from queue import Queue
-from task import Task
-from future import Future
+from .task import Task
+from .future import Future
 
 
 class EventLoop:

@@ -1,7 +1,7 @@
 import socket
 import ssl
 from urllib.parse import urlparse
-from future import Future
+from .future import Future
 from typing import Optional
 
 class Connection:

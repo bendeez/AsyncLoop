@@ -1,5 +1,5 @@
-from future import Future
-from connection import Connection
+from .future import Future
+from .connection import Connection
 
 class Task(Future):
 

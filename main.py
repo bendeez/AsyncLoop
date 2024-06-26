@@ -1,5 +1,5 @@
-from event_loop import EventLoop
-from connection import Connection
+from AsyncLoop import EventLoop
+from AsyncLoop import Connection
 
 
 
