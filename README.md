@@ -8,8 +8,8 @@ https://docs.python.org/3/library/selectors.html
 ![Screenshot 2024-06-21 125920](https://github.com/bendeez/async_event_loop/assets/127566471/378260f9-9145-49ff-b910-366f1204171f)
 
 ```python
-from event_loop import EventLoop
-from connection import Connection
+from AsyncLoop import EventLoop
+from AsyncLoop import Connection
 
 
 
