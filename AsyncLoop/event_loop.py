@@ -61,31 +61,20 @@ class EventLoop:
         task.start()
         return task
 
-    def add_connection(self, connection, fut=None,in_gather=False):
-        """
-            in gather=False makes it so we know to set the
-            task's fut reference to synchronize the task
-            in between print statements
-
-            in_gather=True means that the setting
-            the task's fut reference will be set
-            in the task's gather function because only
-            the last future/connection of the gather function
-            needs to be set to the task's fut reference
-        """
+    def add_connection(self, connection, fut=None):
         if fut is None:
             fut = Future()
             connection.fut = fut
-        if not in_gather:
-            Task.fut_reference.append(fut)
-        connection.connection_callback()
+        connection.initialize_connection()
         if len(self.select_connections) < self.max_connections:
             self.select_connections.append(connection)
             self.select.register(connection.client, selectors.EVENT_READ | selectors.EVENT_WRITE,
                                  data=connection)
         else:
-            # limits the amount of concurrent connections
-            self.connection_queue.put(connection)
+           """
+           limits the amount of concurrent connections
+           """
+           self.connection_queue.put(connection)
         return fut
 
     def remove_connection(self, connection):

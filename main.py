@@ -11,15 +11,17 @@ async def scrape_other_website():
 
 async def scrape_website(url):
     first_result = await scrape_other_website()
-    print(first_result)
+    # print(first_result)
     second_result = await loop.gather(*[Connection.create_connection(url) for _ in range(10)])
     return second_result
 
 async def main(loop):
     url = "https://github.com/"
     task_1 = loop.create_task(scrape_website(url))
-    result = await loop.gather(task_1)
-    print(result)
+    task_2 = loop.create_task(scrape_other_website())
+    result = await loop.gather(task_1,task_2)
+    # print(result)
+
 
 loop.run(main(loop))
 

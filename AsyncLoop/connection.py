@@ -13,7 +13,6 @@ class Connection:
         self.host = host
         self.port = port
         self.path = path
-        self.connection_callback = self.initialize_connection
         self.write_callback = self.send_request
         self.read_callback = self.get_response
         """
@@ -51,11 +50,8 @@ class Connection:
         try:
             data = self.client.recv(1024)
             if not data:
-                self.fut.set_result(self.buffer.decode())
-                if self.fut.unblocking_task is not None:
-                    task = self.fut.unblocking_task
-                    task.update_progress(self.fut,self.buffer.decode())
                 loop.remove_connection(self)
+                self.fut.set_result(self.buffer.decode())
             self.buffer += data
         except ssl.SSLError:
             pass
