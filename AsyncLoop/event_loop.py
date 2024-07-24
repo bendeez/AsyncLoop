@@ -5,14 +5,16 @@ from .future import Future
 
 
 class EventLoop:
+    running_loop = None
 
-    def __init__(self, max_connections=100):
-        self.select_connections = []
+    def __init__(self, max_clients=100):
+        EventLoop.running_loop = self
+        self.select_clients = []
         self.select = selectors.DefaultSelector()
-        self.max_connections = max_connections
-        self.connection_queue = Queue()
+        self.max_clients = max_clients
+        self.client_queue = Queue()
 
-    def run(self, coro):
+    def run_coro(self, coro):
         # main coro
         try:
             coro.send(None)
@@ -23,69 +25,81 @@ class EventLoop:
     def run_until_complete(self, coro):
         # main coro
         while True:
-            self.check_queue_connections()
-            if len(self.select_connections) == 0:
-                self.run(coro)
+            self.check_queue_clients()
+            if len(self.select_clients) == 0:
+                self.run_coro(coro)
                 break
             events = self.select.select()
             for key, mask in events:
-                connection = key.data
+                client = key.data
                 if mask & selectors.EVENT_READ:
-                    connection.read_callback(loop=self)
+                    client.read_callback(loop=self)
                 if mask & selectors.EVENT_WRITE:
-                    connection.write_callback(loop=self)
+                    client.write_callback(loop=self)
 
-    def check_queue_connections(self):
+    def check_queue_clients(self):
         """
-            checks for waiting requests/connections when
-            the max connection level isn't reach
-            after a connection has been removed from
-            select connections
+            checks for waiting requests/clients when
+            the max client level isn't reach
+            after a client has been removed from
+            select clients
         """
-        if len(self.select_connections) < self.max_connections:
-            if not self.connection_queue.empty():
-                connection = self.connection_queue.get()
-                if connection.fut:
-                    self.add_connection(connection,connection.fut)
-                else:
-                    self.add_connection(connection)
+        if len(self.select_clients) < self.max_clients:
+            if not self.client_queue.empty():
+                client = self.client_queue.get()
+                self.select_clients.append(client)
+                self.select.register(client.sock, selectors.EVENT_READ | selectors.EVENT_WRITE,
+                                     data=client)
 
-    async def gather(self, *args):
-        task = Task(loop=self)
-        await task.gather_tasks(*args)
-        responses = await task
-        return responses
-
-    def create_task(self, coro):
-        task = Task(self,coro)
-        task.start()
-        return task
-
-    def add_connection(self, connection, fut=None):
-        if fut is None:
-            fut = Future()
-            connection.fut = fut
-        connection.initialize_connection()
-        if len(self.select_connections) < self.max_connections:
-            self.select_connections.append(connection)
-            self.select.register(connection.client, selectors.EVENT_READ | selectors.EVENT_WRITE,
-                                 data=connection)
+    def add_client(self,client):
+        fut = Future()
+        client.fut = fut
+        if len(self.select_clients) < self.max_clients:
+            self.select_clients.append(client)
+            self.select.register(client.sock, selectors.EVENT_READ | selectors.EVENT_WRITE,
+                                 data=client)
         else:
            """
-           limits the amount of concurrent connections
+           limits the amount of concurrent clients
            """
-           self.connection_queue.put(connection)
+           self.client_queue.put(client)
         return fut
 
-    def remove_connection(self, connection):
-        self.select_connections.remove(connection)
-        self.select.unregister(connection.client)
+    def remove_client(self, client):
+        self.select_clients.remove(client)
+        self.select.unregister(client.sock)
 
-    def modify_event(self, connection, method):
+    def modify_event(self, client, method):
         if method == "r":
             event = selectors.EVENT_READ
         elif method == "w":
             event = selectors.EVENT_WRITE
         else:
             return
-        self.select.modify(connection.client, event, data=connection)
+        self.select.modify(client.sock, event, data=client)
+
+    @classmethod
+    def run(cls, coro, max_clients=100):
+        loop = cls(max_clients=max_clients)
+        loop.run_coro(coro)
+
+    @staticmethod
+    async def gather(*args):
+        loop = EventLoop.running_loop
+        if loop is not None:
+            task = Task(loop=loop)
+            await task.gather_futures(*args)
+            responses = await task
+            return responses
+        else:
+            raise RuntimeError("No event loop is running")
+
+    @staticmethod
+    def create_task(coro):
+        loop = EventLoop.running_loop
+        if loop is not None:
+            task = Task(loop,coro)
+            task.start()
+            return task
+        else:
+            raise RuntimeError("No event loop is running")

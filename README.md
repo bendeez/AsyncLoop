@@ -9,11 +9,11 @@ https://docs.python.org/3/library/selectors.html
 
 ```python
 from AsyncLoop import EventLoop
-from AsyncLoop import Connection
+from AsyncLoop import client
 
 
 
-loop = EventLoop(max_connections=15)
+loop = EventLoop(max_clients=15)
 
 async def scrape_other_website():
     results = await loop.gather(Connection.create_connection("https://www.google.com/"))
