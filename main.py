@@ -18,5 +18,5 @@ async def main():
     result = await EventLoop.gather(task_1,task_2)
     print(result)
 
-EventLoop.run(main(), max_clients=100)
+EventLoop.run(main())
 
