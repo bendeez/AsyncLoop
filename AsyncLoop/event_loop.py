@@ -17,17 +17,17 @@ class EventLoop:
     def run_coro(self, coro):
         # main coro
         try:
-            coro.send(None)
-            self.run_until_complete(coro)
+            while True:
+                coro.send(None)
+                self.run_until_complete()
         except StopIteration:
             pass
 
-    def run_until_complete(self, coro):
+    def run_until_complete(self):
         # main coro
         while True:
             self.check_queue_clients()
             if len(self.select_clients) == 0:
-                self.run_coro(coro)
                 break
             events = self.select.select()
             for key, mask in events:
