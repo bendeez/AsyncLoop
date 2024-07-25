@@ -24,7 +24,10 @@ class EventLoop:
             pass
 
     def run_until_complete(self):
-        # main coro
+        """
+            synchronizes event loop
+        :return: 
+        """""
         while True:
             self.check_queue_clients()
             if len(self.select_clients) == 0:
