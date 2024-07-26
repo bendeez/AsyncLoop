@@ -31,7 +31,4 @@ async def main():
     result = await AsyncLoop.gather(task_1,task_2)
     print(result)
 
-AsyncLoop.run(main(), max_clients=100)k_1,task_2)
-    print(result)
-
-EventLoop.run(main())
+AsyncLoop.run(main(), max_clients=100)
