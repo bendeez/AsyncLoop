@@ -1,6 +1,5 @@
 import selectors
 from queue import Queue
-from .task import Task
 from .future import Future
 
 
@@ -13,6 +12,10 @@ class EventLoop:
         self.select = selectors.DefaultSelector()
         self.max_clients = max_clients
         self.client_queue = Queue()
+        self.task_queue = Queue()
+
+    def call_soon(self, coro):
+        self.task_queue.put(coro)
 
     def run_coro(self, coro):
         # main coro
@@ -81,28 +84,6 @@ class EventLoop:
             return
         self.select.modify(client.sock, event, data=client)
 
-    @classmethod
-    def run(cls, coro, max_clients=100):
-        loop = cls(max_clients=max_clients)
-        loop.run_coro(coro)
-
-    @staticmethod
-    async def gather(*args):
-        loop = EventLoop.running_loop
-        if loop is not None:
-            task = Task(loop=loop)
-            await task.gather_futures(*args)
-            responses = await task
-            return responses
-        else:
-            raise RuntimeError("No event loop is running")
-
-    @staticmethod
-    def create_task(coro):
-        loop = EventLoop.running_loop
-        if loop is not None:
-            task = Task(loop,coro)
-            task.start()
-            return task
-        else:
-            raise RuntimeError("No event loop is running")
+def run(coro, max_clients=100):
+    loop = EventLoop(max_clients=max_clients)
+    loop.run_coro(coro)
