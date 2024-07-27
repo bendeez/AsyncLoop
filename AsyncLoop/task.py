@@ -2,13 +2,16 @@ from .future import Future
 
 class Task(Future):
 
-    def __init__(self, coro=None):
+    def __init__(self, awaitable=None):
         super().__init__()
-        self.coro = coro
+        self.awaitable = awaitable
 
     def start(self):
         try:
-            fut = self.coro.send(None)
+            if isinstance(self.awaitable, Future):
+                fut = self.awaitable
+            else:
+                fut = self.awaitable.send(None)
             fut.add_done_callback(self.start)
         except StopIteration as e:
             self.set_result(e.value)
@@ -24,13 +27,16 @@ async def gather(*futures):
     response = await task
     return response
 
-def create_task(coro):
+def create_task(awaitable):
     """
         runs task without blocking
     """
-    task = Task(coro=coro)
+    task = Task(awaitable=awaitable)
     try:
-        fut = task.coro.send(None)
+        if isinstance(awaitable, Future):
+            fut = awaitable
+        else:
+            fut = awaitable.send(None)
         fut.add_done_callback(task.start)
         return task
     except StopIteration as e:
