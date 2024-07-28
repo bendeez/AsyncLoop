@@ -49,7 +49,7 @@ class AsyncClient:
             pass
 
     @classmethod
-    def request(cls,url):
+    def create_client(cls,url):
         parsed_url = urlparse(url)
         if parsed_url.hostname.startswith("www."):
             host = parsed_url.hostname[4:]
@@ -65,7 +65,11 @@ class AsyncClient:
             path = "/"
         else:
             path = parsed_url.path
-        client = cls(host=host,port=port,path=path)
+        return cls(host=host,port=port,path=path)
+
+    @staticmethod
+    def request(url):
+        client = AsyncClient.create_client(url)
         loop = EventLoop.running_loop
         if loop is not None:
             fut = loop.add_client(client)
